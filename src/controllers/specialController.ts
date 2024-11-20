@@ -8,7 +8,7 @@ module.exports = {
    * No @param {} res Just a redirection
    */
   default: async function (req: Request, res: Response) {
-    var url = req.baseUrl;
+    let url = req.baseUrl;
     res.status(200).redirect(`${url.slice(0, url.lastIndexOf("/"))}/`);
   },
 };

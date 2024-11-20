@@ -1,9 +1,9 @@
-var special = require("@controllers/specialController");
-var user = require("@controllers/userController");
+let special = require("@controllers/specialController");
+let user = require("@controllers/userController");
 
 import { Router } from "express";
 
-var router = Router();
+let router = Router();
 
 // Special routes
 router.route("/").get(special.default);
