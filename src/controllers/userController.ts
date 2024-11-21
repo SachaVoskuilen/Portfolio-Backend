@@ -2,6 +2,7 @@ import { loginSchema } from "@validation/user/loginValidation";
 import { Request, Response } from "express";
 import { validateRequest } from "@utils/validation";
 import { registerSchema } from "@validation/user/registerValidation";
+import pool from "src/database";
 
 module.exports = {
   /**
@@ -11,18 +12,18 @@ module.exports = {
    * @param {} res
    */
   login: async function (req: Request, res: Response) {
-    const { success, errors, data } = validateRequest(loginSchema, {
+    let { success, errors, data } = validateRequest(loginSchema, {
       ...req.body,
       ...req.headers,
     });
 
-    console.log(errors);
-
     if (!success) {
-      return res.status(400).json({ errors });
+      return res.status(400).json({ success, errors });
     }
 
-    res.status(200).json({ message: "Login successful", data });
+    // On success do something
+
+    res.status(200).json({ success, data });
   },
 
   /**
@@ -32,15 +33,53 @@ module.exports = {
    * @param {} res
    */
   register: async function (req: Request, res: Response) {
-    const { success, errors, data } = validateRequest(registerSchema, {
+    let { success, errors, data } = validateRequest(registerSchema, {
       ...req.body,
       ...req.headers,
     });
 
     if (!success) {
-      return res.status(400).json({ errors });
+      return res.status(400).json({ success, errors });
     }
 
-    res.status(200).json({ message: "Register successful", data });
+    const { username, email, password } = data;
+
+    // Connect to db
+    const client = await pool.connect();
+
+    try {
+      // Insert user
+      const insertQuery = {
+        text: "INSERT INTO users (username, email, password) VALUES ($1, $2 ,$3);",
+        values: [username, email, password],
+      };
+      await client.query(insertQuery);
+
+      // Get inserted user
+      const queryInsertedUser = {
+        text: "SELECT * FROM users WHERE username = $1;",
+        values: [username],
+      };
+      const data = await client.query(queryInsertedUser);
+      const user = data.rows[0];
+
+      return res
+        .status(201)
+        .json({ success, message: "Signup successful", data: user });
+    } catch (err) {
+      if (err instanceof Error) {
+        console.error("Database error:", err.message);
+        return res
+          .status(500)
+          .json({ success: false, message: "Internal server error" });
+      }
+      console.error("Unknown error:", err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Unexpected error" });
+    } finally {
+      // Now closes connection
+      client.release();
+    }
   },
 };

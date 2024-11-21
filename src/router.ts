@@ -10,7 +10,7 @@ router.route("/").get(special.default);
 
 // User routes
 router.route("/login").get(user.login);
-router.route("/register").get(user.register);
+router.route("/register").post(user.register);
 
 // Export all api routes
 module.exports = router;

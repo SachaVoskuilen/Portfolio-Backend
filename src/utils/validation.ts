@@ -10,10 +10,6 @@ export const validateRequest = (schema: ZodSchema, data: any) => {
   const result = schema.safeParse(data);
 
   if (!result.success) {
-    console.log(result.error);
-  }
-
-  if (!result.success) {
     return {
       success: false,
       errors: result.error.issues.reduce<Record<string, string[]>>(
