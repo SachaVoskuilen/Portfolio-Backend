@@ -9,7 +9,7 @@ let router = Router();
 router.route("/").get(special.default);
 
 // User routes
-router.route("/login").get(user.login);
+router.route("/login").post(user.login);
 router.route("/register").post(user.register);
 
 // Export all api routes

@@ -2,12 +2,19 @@
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 import path from "path";
+import cors from "cors";
 import pool from "./database";
 
 dotenv.config();
 
 const app: Express = express();
 const port = process.env.EXPRESS_PORT || 3000;
+
+export const corsOptions: cors.CorsOptions = {
+  origin: process.env.ALLOWED_ORIGINS!.split(" "),
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use(
