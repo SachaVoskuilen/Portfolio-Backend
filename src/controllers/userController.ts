@@ -2,10 +2,9 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { Request, Response } from "express";
 import { DatabaseError } from "pg";
-import pool from "src/database";
+import pool from "@database";
 import { validateRequest } from "@utils/validation";
-import { loginSchema } from "@validation/user/loginValidation";
-import { registerSchema } from "@validation/user/registerValidation";
+import { loginSchema, registerSchema } from "@validation/index";
 
 module.exports = {
   /**
@@ -22,7 +21,7 @@ module.exports = {
     });
 
     if (!success) {
-      return res.status(400).json({ success: false, errors });
+      return res.status(400).json({ success: false, errors: errors });
     }
 
     const { username, email, password } = data;
@@ -66,7 +65,8 @@ module.exports = {
       // Respond with token
       return res.status(200).json({
         success: true,
-        data: { token, message: "Login successful" },
+        token,
+        message: "Login successful",
       });
     } catch (err) {
       console.error("Unexpected error during login:", err);
@@ -123,7 +123,8 @@ module.exports = {
       // Respond with token and success message
       return res.status(201).json({
         success: true,
-        data: { token, message: "Signup successful" },
+        token,
+        message: "Signup successful",
       });
     } catch (err) {
       const error = err as DatabaseError;

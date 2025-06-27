@@ -7,7 +7,7 @@ module.exports = {
    * No @param {} req The required url is already here
    * No @param {} res Just a redirection
    */
-  default: async function (req: Request, res: Response) {
+  redirectSlice: async function (req: Request, res: Response) {
     let url = req.baseUrl;
     res.status(200).redirect(`${url.slice(0, url.lastIndexOf("/"))}/`);
   },
