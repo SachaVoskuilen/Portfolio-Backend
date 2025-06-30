@@ -18,8 +18,9 @@ router.route("/register").post(user.register);
 // About Me routes
 router.route("/about-me").get(about.aboutMe);
 
-// About Me routes
+// Project routes
 router.route("/projects").get(projects.getProjects);
+router.route("/projects/:slug").get(projects.getProjectBySlug);
 
 // About Me routes
 router.route("/languages").get(language.getLanguages);

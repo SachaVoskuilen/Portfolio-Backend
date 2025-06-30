@@ -4,6 +4,7 @@ import path from "path";
 import cors from "cors";
 import pool from "@database";
 import { loadLanguages } from "@helpers/index";
+import { readdir, readFile } from "fs/promises";
 
 dotenv.config();
 
@@ -100,30 +101,21 @@ async function dbInit() {
       );
     `);
 
-    console.log("✅ Inserting example data...");
-    await client.query(`
-      INSERT INTO language (name, code) VALUES
-        ('Nederlands', 'NL'),
-        ('English', 'EN');
+    console.log("✅ Tables created!");
 
-      INSERT INTO project_group (slug) VALUES
-        ('portfolio-website');
+    console.log("⏳ Inserting seed data...");
+    const seedDirPath = path.join(__dirname, "database", "seed");
+    const seedFiles = await readdir(seedDirPath);
+    const sortedSeedFiles = seedFiles.sort(); // Ensure files are executed in order (e.g., 001, 002, ...)
 
-      INSERT INTO project_entry (project_group_id, language_id, part, title, text) VALUES
-        (1, 1, 1, 'Introductie', 'Welkom bij mijn portfolio.'),
-        (1, 1, 2, 'Details', 'Gebouwd met PostgreSQL en Next.js.'),
-        (1, 2, 1, 'Introduction', 'Welcome to my portfolio.'),
-        (1, 2, 2, 'Details', 'Built with PostgreSQL and Next.js.');
-
-      INSERT INTO project_image (project_group_id, image_url, alt_text, sort_order) VALUES
-        (1, 'https://pixelz.cc/wp-content/uploads/2018/07/gorilla-uhd-4k-wallpaper.jpg', 'Homepage screenshot', 1),
-        (1, 'https://wallpapercave.com/wp/wp4903057.jpg', 'Details page', 2);
-
-      INSERT INTO project_entry_image (project_entry_id, image_id) VALUES
-        (1, 1),  -- koppelt afbeelding 1 aan entry 1
-        (2, 2),
-        (4, 2);  -- koppelt afbeelding 2 aan entry 4 (EN details)
-    `);
+    for (const file of sortedSeedFiles) {
+      if (file.endsWith(".sql")) {
+        const filePath = path.join(seedDirPath, file);
+        const sql = await readFile(filePath, "utf8");
+        await client.query(sql);
+        console.log(`✅ Executed seed file: ${file}`);
+      }
+    }
 
     console.log("🎉 Database setup complete!");
   } catch (err) {
