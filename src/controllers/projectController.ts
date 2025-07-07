@@ -2,11 +2,8 @@ import { Request, Response } from "express";
 import pool from "@database";
 import { languageSchema } from "@validation/index";
 import { validateRequest } from "@utils/index";
-import {
-  ProjectQueryResult,
-  FormattedProject,
-} from "@interfaces/projectInterfaces";
-import { getLanguages } from "@helpers/languageCache";
+import { ProjectQueryResult, FormattedProject } from "@interfaces/index";
+import { getLanguages } from "@helpers/index";
 import { Language } from "@models/index";
 
 module.exports = {

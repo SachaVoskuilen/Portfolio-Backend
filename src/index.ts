@@ -1,4 +1,4 @@
-import express, { Express, Request, Response } from "express";
+import express, { Express } from "express";
 import dotenv from "dotenv";
 import path from "path";
 import cors from "cors";
@@ -53,67 +53,42 @@ async function dbInit() {
     // );`);
 
     console.log("⏳ Dropping existing tables...");
-    await client.query(`
-      DROP TABLE IF EXISTS project_entry_image CASCADE;
-      DROP TABLE IF EXISTS project_image CASCADE;
-      DROP TABLE IF EXISTS project_entry CASCADE;
-      DROP TABLE IF EXISTS project_group CASCADE;
-      DROP TABLE IF EXISTS language CASCADE;
-    `);
+    await client.query(`DROP TABLE IF EXISTS about_me_entry_image CASCADE;`);
+    await client.query(`DROP TABLE IF EXISTS about_me_image CASCADE;`);
+    await client.query(`DROP TABLE IF EXISTS about_me_entry CASCADE;`);
+    await client.query(`DROP TABLE IF EXISTS about_me_group CASCADE;`);
+    await client.query(`DROP TABLE IF EXISTS project_entry_image CASCADE;`);
+    await client.query(`DROP TABLE IF EXISTS project_image CASCADE;`);
+    await client.query(`DROP TABLE IF EXISTS project_entry CASCADE;`);
+    await client.query(`DROP TABLE IF EXISTS project_group CASCADE;`);
+    await client.query(`DROP TABLE IF EXISTS language CASCADE;`);
 
-    console.log("✅ Creating tables...");
-    await client.query(`
-      CREATE TABLE language (
-        language_id SERIAL PRIMARY KEY,
-        name VARCHAR(50) NOT NULL UNIQUE,
-        code VARCHAR(5) NOT NULL UNIQUE
-      );
+    console.log("⏳ Running database migrations...");
+    const migrationsDirPath = path.join(__dirname, "database", "migrations");
+    const migrationFiles = await readdir(migrationsDirPath);
+    const sortedMigrationFiles = migrationFiles.sort();
 
-      CREATE TABLE project_group (
-        project_group_id SERIAL PRIMARY KEY,
-        slug VARCHAR(100) UNIQUE NOT NULL,
-        created_at TIMESTAMP DEFAULT NOW(),
-        is_public BOOLEAN DEFAULT TRUE
-      );
-
-      CREATE TABLE project_entry (
-        project_entry_id SERIAL PRIMARY KEY,
-        project_group_id INTEGER NOT NULL REFERENCES project_group(project_group_id) ON DELETE CASCADE,
-        language_id INTEGER NOT NULL REFERENCES language(language_id),
-        part INTEGER NOT NULL,
-        title VARCHAR(100) NOT NULL,
-        text TEXT NOT NULL,
-        UNIQUE(project_group_id, language_id, part)
-      );
-
-      CREATE TABLE project_image (
-        image_id SERIAL PRIMARY KEY,
-        project_group_id INTEGER NOT NULL REFERENCES project_group(project_group_id) ON DELETE CASCADE,
-        image_url TEXT NOT NULL,
-        alt_text TEXT,
-        sort_order INTEGER DEFAULT 0
-      );
-
-      CREATE TABLE project_entry_image (
-        project_entry_id INTEGER REFERENCES project_entry(project_entry_id) ON DELETE SET NULL,
-        image_id INTEGER REFERENCES project_image(image_id) ON DELETE SET NULL,
-        PRIMARY KEY (project_entry_id, image_id)
-      );
-    `);
-
-    console.log("✅ Tables created!");
-
-    console.log("⏳ Inserting seed data...");
-    const seedDirPath = path.join(__dirname, "database", "seed");
-    const seedFiles = await readdir(seedDirPath);
-    const sortedSeedFiles = seedFiles.sort(); // Ensure files are executed in order (e.g., 001, 002, ...)
-
-    for (const file of sortedSeedFiles) {
+    for (const file of sortedMigrationFiles) {
       if (file.endsWith(".sql")) {
-        const filePath = path.join(seedDirPath, file);
+        const filePath = path.join(migrationsDirPath, file);
         const sql = await readFile(filePath, "utf8");
         await client.query(sql);
-        console.log(`✅ Executed seed file: ${file}`);
+        console.log(`✅ Executed migration: ${file}`);
+      }
+    }
+    console.log("✅ Database migrations complete!");
+
+    console.log("⏳ Inserting seed data...");
+    const seedersDirPath = path.join(__dirname, "database", "seeders");
+    const seederFiles = await readdir(seedersDirPath);
+    const sortedSeederFiles = seederFiles.sort();
+
+    for (const file of sortedSeederFiles) {
+      if (file.endsWith(".sql")) {
+        const filePath = path.join(seedersDirPath, file);
+        const sql = await readFile(filePath, "utf8");
+        await client.query(sql);
+        console.log(`✅ Executed seeder: ${file}`);
       }
     }
 

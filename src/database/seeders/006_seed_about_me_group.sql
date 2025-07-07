@@ -1,0 +1,1 @@
+INSERT INTO about_me_group (slug) VALUES ('about-me');
